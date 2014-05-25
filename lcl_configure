@@ -1,0 +1,296 @@
+#!/usr/bin/env ruby
+
+#
+#
+# lcl_configure -- LibComponentLogging, configuration
+#
+#
+# Copyright (c) 2014 Arne Harren <ah@0xc0.de>
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+# THE SOFTWARE.
+
+require 'FileUtils'
+require 'Pathname'
+require 'JSON'
+require 'Digest'
+
+
+#
+# usage, info, error, etc.
+#
+
+@usage=<<END
+usage: lcl_configure <type> [<folder>]
+END
+
+def print_usage_and_exit(message = '')
+  puts message if message != ''
+  puts @usage
+  exit
+end
+
+def error(message)
+  puts message
+  exit
+end
+
+def info(message)
+  puts message
+end
+
+def note(message)
+  puts '[!] ' + message
+end
+
+
+#
+# file/directory utilities
+#
+
+def exists_directory(directory_name)
+  return File.directory?(directory_name)
+end
+
+def exists_file(file_name)
+  return File.file?(file_name)
+end
+
+def create_file(file_name)
+  FileUtils.rm(file_name) if File.file?(file_name)
+  FileUtils.touch(file_name)
+end
+
+def copy_file(src_file_name, dst_file_name)
+  FileUtils.cp(src_file_name, dst_file_name)
+end
+
+def add_include(file_name, include)
+  append_to_file(file_name, "#include \"#{include}\"\n")
+end
+
+def append_to_file(file_name, what)
+  File.open(file_name, 'a') do |f|
+    f.puts(what)
+  end
+end
+
+
+#
+# standard configuration files, common parts
+#
+
+@config_components_file_name = "lcl_config_components.h"
+@config_logger_file_name = "lcl_config_logger.h"
+@config_extensions_file_name = "lcl_config_extensions.h"
+
+def prepare_configure_plain()
+  create_file(@config_components_file_name)
+  create_file(@config_logger_file_name)
+  create_file(@config_extensions_file_name)
+end
+
+
+#
+# configuration for plain installations
+#
+
+def configure_plain()
+  # prepare configuration files
+  prepare_configure_plain()
+end
+
+
+#
+# configuration for CocoaPods installations
+#
+
+@pod_user_config_components_file_name = "lcl_config_components.h.pods"
+@pod_user_config_extensions_file_name = "lcl_config_extensions.h.pods"
+
+def configure_pod_core(pod_dir, pod_name, configure_file, configure_data)
+  # nothing to do for core
+end
+
+def configure_pod_logger(pod_dir, pod_name, configure_file, configure_data)
+  # add header file
+  main_header = configure_data['main_header']
+  error("Error: missing 'main_header' in '#{configure_file}'") if !main_header
+  add_include(@config_logger_file_name, main_header)
+
+  # instantiate configuration template file (optional)
+  config_template = configure_data['config_template']
+  configure_pod_instantiate_config_template(pod_dir, config_template) if config_template
+end
+
+def configure_pod_extension(pod_dir, pod_name, configure_file, configure_data)
+  # add header file
+  main_header = configure_data['main_header']
+  error("Error: missing 'main_header' in '#{configure_file}'") if !main_header
+  add_include(@config_extensions_file_name, main_header)
+
+  # instantiate configuration template file (optional)
+  config_template = configure_data['config_template']
+  configure_pod_instantiate_config_template(pod_dir, config_template) if config_template
+end
+
+def configure_pod_instantiate_config_template(pod_dir, config_template)
+  config_template_file = Pathname(pod_dir) + config_template
+  config_template_sha256 = Digest::SHA256.file(config_template_file).hexdigest
+  config_file_name = config_template.gsub(/\.template/, '')
+  if exists_file(config_file_name)
+    # nothing to do if existing file originates from same template file
+    data = configure_pod_read_lcl_configure_data(config_file_name)
+    if data['base'] != config_template_sha256
+      # existing file doesn't originate from template file, create .new file
+      info("Creating configuration file '#{config_file_name}' from template '#{config_template_file}'")
+      config_new_file_name = config_file_name + '.new'
+      configure_pod_copy_file_with_lcl_configure_data(config_template_file, config_template_sha256, config_new_file_name)
+      note("Configuration file '#{config_file_name}' already exists, please merge with new file '#{config_new_file_name}'")
+    end
+  else
+    # create config file
+    info("Creating configuration file '#{config_file_name}' from template '#{config_template_file}'")
+    configure_pod_copy_file_with_lcl_configure_data(config_template_file, config_template_sha256, config_file_name)
+    note("Configuration file '#{config_file_name}' needs to be adapted before compiling your project, e.g. adapt '<UniquePrefix>'")
+  end
+end
+
+def configure_pod_copy_file_with_lcl_configure_data(config_template_file, config_template_sha256, file_name)
+  # copy the file and add a lcl_configure data at the end
+  copy_file(config_template_file.to_s, file_name)
+  data = <<END
+/*:lcl_configure
+  {
+    "base" : "#{config_template_sha256}"
+  }
+*/
+END
+  append_to_file(file_name, data)
+end
+
+def configure_pod_read_lcl_configure_data(file_name)
+  # read the lcl_configure data from the given file
+  content = File.read(file_name)
+  content =~ /^\/\*\:lcl_configure((.*)*)^\*\//m
+  return {} if !$1
+
+  # return parsed JSON data
+  data = JSON.parse($1)
+  return data
+end
+
+def contained_in_podfile_lock(pod_name)
+  content = File.read('Podfile.lock')
+  return content.include?(pod_name + ':')
+end
+
+def prepare_configure_pod()
+  info('Preparing configuration files')
+
+  # prepare user config files
+  if (!exists_file(@pod_user_config_components_file_name))
+    create_file(@pod_user_config_components_file_name)
+  end
+  if (!exists_file(@pod_user_config_extensions_file_name))
+    create_file(@pod_user_config_extensions_file_name)
+  end
+
+  # prepare config files
+  prepare_configure_plain()
+
+  # add includes to user config files
+  add_include(@config_components_file_name, @pod_user_config_components_file_name)
+  add_include(@config_extensions_file_name, @pod_user_config_extensions_file_name)
+end
+
+# configure for CocoaPods
+def configure_pod()
+  # check existence of CocoaPods files and directories
+  error("Error: no 'Podfile' file found") if !exists_file('Podfile')
+  error("Error: no 'Podfile.lock' file found") if !exists_file('Podfile.lock')
+  error("Error: no 'Pods' directory found") if !exists_directory('Pods')
+
+  # prepare configuration files
+  prepare_configure_pod()
+
+  # used core and logger pods
+  pod_name_core = nil
+  pod_name_logger = nil
+
+  # search for pd.lcl_configure files in Pods directory
+  Dir.glob('Pods/**/pod.lcl_configure').each do |configure_file|
+    # extract type of pod (core, logger, extension) and name of pod from path
+    pod_dir = File.dirname(configure_file)
+    pod_name = File.basename(pod_dir).to_s
+
+    # check Podfile.lock
+    next if !contained_in_podfile_lock(pod_name)
+
+    # read and parse configure file
+    configure_data = JSON.parse(File.read(configure_file))
+    type = configure_data['type']
+    error("Error: missing 'type' in '#{configure_file}'") if !type
+    name = configure_data['name']
+    error("Error: missing 'name' in '#{configure_file}'") if !type
+
+    # process configure file
+    case type
+      when 'core'
+        error("Error: cannot use '#{pod_name}' as core, '#{pod_name_core}' is already used") if pod_name_core
+        info("Using #{pod_name} (#{type})")
+        configure_pod_core(pod_dir, pod_name, configure_file, configure_data)
+        pod_name_core = pod_name
+      when 'logger'
+        error("Error: cannot use '#{pod_name}' as logger, '#{pod_name_logger}' is already used") if pod_name_logger
+        info("Using #{pod_name} (#{name} #{type})")
+        configure_pod_logger(pod_dir, pod_name, configure_file, configure_data)
+        pod_name_logger = pod_name
+      when 'extension'
+        info("Using #{pod_name} (#{name} #{type})")
+        configure_pod_extension(pod_dir, pod_name, configure_file, configure_data)
+      else
+        error("Error: pod '#{pod_name}' has unsupported type '#{type}'")
+    end
+  end
+end
+
+def main(args)
+  type = args[0]
+  print_usage_and_exit('Error: missing argument <type>') if !type
+
+  folder = args[1]
+  folder = '.' if !folder
+
+  case type
+    when 'plain'
+      Dir.chdir(folder) do
+        configure_plain()
+      end
+    when 'pod'
+      Dir.chdir(folder) do
+        configure_pod()
+      end
+    else
+      print_usage_and_exit("Error: unknown type '#{type}', available types are 'plain', 'pod'")
+  end
+
+  exit
+end
+
+main(ARGV)
