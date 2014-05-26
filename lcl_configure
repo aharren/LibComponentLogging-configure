@@ -197,7 +197,7 @@ end
 
 def contained_in_podfile_lock(pod_name)
   content = File.read('Podfile.lock')
-  return content.include?(pod_name + ':')
+  return content.include?(pod_name + ' ')
 end
 
 def prepare_configure_pod()
