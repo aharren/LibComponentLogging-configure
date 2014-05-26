@@ -32,7 +32,7 @@ require 'Digest'
 
 
 #
-# usage, info, error, etc.
+# Usage, info, error, etc.
 #
 
 @usage=<<END
@@ -60,7 +60,7 @@ end
 
 
 #
-# file/directory utilities
+# File/directory utilities.
 #
 
 def exists_directory(directory_name)
@@ -92,7 +92,7 @@ end
 
 
 #
-# standard configuration files, common parts
+# Standard configuration files, common parts.
 #
 
 @config_components_file_name = "lcl_config_components.h"
@@ -107,44 +107,44 @@ end
 
 
 #
-# configuration for plain installations
+# Configuration for plain installations.
 #
 
 def configure_plain()
-  # prepare configuration files
+  # Prepare configuration files.
   prepare_configure_plain()
 end
 
 
 #
-# configuration for CocoaPods installations
+# Configuration for CocoaPods installations.
 #
 
 @pod_user_config_components_file_name = "lcl_config_components.h.pods"
 @pod_user_config_extensions_file_name = "lcl_config_extensions.h.pods"
 
 def configure_pod_core(pod_dir, pod_name, configure_file, configure_data)
-  # nothing to do for core
+  # Nothing to do for core.
 end
 
 def configure_pod_logger(pod_dir, pod_name, configure_file, configure_data)
-  # add header file
+  # Add header file.
   main_header = configure_data['main_header']
   error("Error: missing 'main_header' in '#{configure_file}'") if !main_header
   add_include(@config_logger_file_name, main_header)
 
-  # instantiate configuration template file (optional)
+  # Instantiate configuration template file (optional).
   config_template = configure_data['config_template']
   configure_pod_instantiate_config_template(pod_dir, config_template) if config_template
 end
 
 def configure_pod_extension(pod_dir, pod_name, configure_file, configure_data)
-  # add header file
+  # Add header file.
   main_header = configure_data['main_header']
   error("Error: missing 'main_header' in '#{configure_file}'") if !main_header
   add_include(@config_extensions_file_name, main_header)
 
-  # instantiate configuration template file (optional)
+  # Instantiate configuration template file (optional).
   config_template = configure_data['config_template']
   configure_pod_instantiate_config_template(pod_dir, config_template) if config_template
 end
@@ -154,17 +154,27 @@ def configure_pod_instantiate_config_template(pod_dir, config_template)
   config_template_sha256 = Digest::SHA256.file(config_template_file).hexdigest
   config_file_name = config_template.gsub(/\.template/, '')
   if exists_file(config_file_name)
-    # nothing to do if existing file originates from same template file
+    # We've stored the SHA256 hash of the original file inside a
+    #   /*:lcl_configure
+    #   */
+    # section in the configuration file.
+    # If the stored hash matches the hash of the current template file,
+    # then we assume that the existing configuration file originates from that
+    # template file. Then, there's nothing to do.
     data = configure_pod_read_lcl_configure_data(config_file_name)
     if data['base'] != config_template_sha256
-      # existing file doesn't originate from template file, create .new file
+      # Existing file doesn't originate from template file, create .new file.
       info("Creating configuration file '#{config_file_name}' from template '#{config_template_file}'")
       config_new_file_name = config_file_name + '.new'
       configure_pod_copy_file_with_lcl_configure_data(config_template_file, config_template_sha256, config_new_file_name)
       note("Configuration file '#{config_file_name}' already exists, please merge with new file '#{config_new_file_name}'")
     end
   else
-    # create config file
+    # Create configuration file, based on template file. Store the SHA256 hash
+    # of the template file inside a
+    #   /*:lcl_configure
+    #   */
+    # section in the created configuration file.
     info("Creating configuration file '#{config_file_name}' from template '#{config_template_file}'")
     configure_pod_copy_file_with_lcl_configure_data(config_template_file, config_template_sha256, config_file_name)
     note("Configuration file '#{config_file_name}' needs to be adapted before compiling your project, e.g. adapt '<UniquePrefix>'")
@@ -172,7 +182,7 @@ def configure_pod_instantiate_config_template(pod_dir, config_template)
 end
 
 def configure_pod_copy_file_with_lcl_configure_data(config_template_file, config_template_sha256, file_name)
-  # copy the file and add a lcl_configure data at the end
+  # Copy the file and add a lcl_configure data at the end.
   copy_file(config_template_file.to_s, file_name)
   data = <<END
 /*:lcl_configure
@@ -185,17 +195,25 @@ END
 end
 
 def configure_pod_read_lcl_configure_data(file_name)
-  # read the lcl_configure data from the given file
+  # Read the lcl_configure data from the given file.
   content = File.read(file_name)
   content =~ /^\/\*\:lcl_configure((.*)*)^\*\//m
   return {} if !$1
 
-  # return parsed JSON data
+  # Return parsed JSON data.
   data = JSON.parse($1)
   return data
 end
 
 def contained_in_podfile_lock(pod_name)
+  # The Podfile.lock contains the following data (CocoaPods 0.33.1):
+  # PODS:
+  # - <pod_name_1> (<version_1>)
+  # - <pod_name_2> (<version_2>)
+  # ...
+  # As the pod name might be the prefix of another pod, e.g. LibComponentLogging-NSLog
+  # is a prefix of LibComponentLogging-NSLogger, we search for "<pod name> ".
+  # We don't expect that LibComponentLogging-xyz is a suffix of another pod.
   content = File.read('Podfile.lock')
   return content.include?(pod_name + ' ')
 end
@@ -203,7 +221,7 @@ end
 def prepare_configure_pod()
   info('Preparing configuration files')
 
-  # prepare user config files
+  # Prepare user config files.
   if (!exists_file(@pod_user_config_components_file_name))
     create_file(@pod_user_config_components_file_name)
   end
@@ -211,45 +229,52 @@ def prepare_configure_pod()
     create_file(@pod_user_config_extensions_file_name)
   end
 
-  # prepare config files
+  # Prepare config files.
   prepare_configure_plain()
 
-  # add includes to user config files
+  # Add includes to user config files.
   add_include(@config_components_file_name, @pod_user_config_components_file_name)
   add_include(@config_extensions_file_name, @pod_user_config_extensions_file_name)
 end
 
-# configure for CocoaPods
+# Configure for CocoaPods.
 def configure_pod()
-  # check existence of CocoaPods files and directories
+  # Check existence of CocoaPods files and directories.
   error("Error: no 'Podfile' file found") if !exists_file('Podfile')
   error("Error: no 'Podfile.lock' file found") if !exists_file('Podfile.lock')
   error("Error: no 'Pods' directory found") if !exists_directory('Pods')
 
-  # prepare configuration files
+  # Prepare configuration files.
   prepare_configure_pod()
 
-  # used core and logger pods
+  # Used core and logger pods.
   pod_name_core = nil
   pod_name_logger = nil
 
-  # search for pd.lcl_configure files in Pods directory
+  # Search for pod.lcl_configure files inside the Pods directory.
   Dir.glob('Pods/**/pod.lcl_configure').each do |configure_file|
-    # extract type of pod (core, logger, extension) and name of pod from path
+    # Extract name of pod from path.
     pod_dir = File.dirname(configure_file)
     pod_name = File.basename(pod_dir).to_s
 
-    # check Podfile.lock
+    # Check Podfile.lock.
     next if !contained_in_podfile_lock(pod_name)
 
-    # read and parse configure file
+    # Read and parse the pod.lcl_configure file.
+    # The file has the following structure:
+    # {
+    #   "name"           : "<name>",
+    #   "type"           : "<type>",            // core, logger, extension
+    #   "main_header"    : "<file>.h",
+    #   "config_template": "<file>.template.h"  // optional
+    # }
     configure_data = JSON.parse(File.read(configure_file))
     type = configure_data['type']
     error("Error: missing 'type' in '#{configure_file}'") if !type
     name = configure_data['name']
     error("Error: missing 'name' in '#{configure_file}'") if !type
 
-    # process configure file
+    # Process configure file.
     case type
       when 'core'
         error("Error: cannot use '#{pod_name}' as core, '#{pod_name_core}' is already used") if pod_name_core
