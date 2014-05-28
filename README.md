@@ -46,16 +46,19 @@ Then, run `lcl_configure pod` to create the `lcl_config*` files:
 
 Based on the `Podfile` above, the following files are created:
 
-    lcl_config_components.h:
+_lcl_config_components.h:_
+
     /*::lcl_configure:begin::*/
     /*::lcl_configure:end::*/
 
-    lcl_config_logger.h:
+_lcl_config_logger.h:_
+
     /*::lcl_configure:begin::*/
     #include "LCLLogFile.h"
     /*::lcl_configure:end::*/
 
-    lcl_config_extensions.h:
+_lcl_config_extensions.h:_
+
     /*::lcl_configure:begin::*/
     #include "qlog.h"
     /*::lcl_configure:end::*/
