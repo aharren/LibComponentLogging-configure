@@ -305,7 +305,7 @@ def configure_pod()
   pod_name_logger = nil
 
   # Search for pod.lcl_configure files inside the Pods directory.
-  Dir.glob('Pods/**/pod.lcl_configure').each do |configure_file|
+  Dir.glob('Pods/*/pod.lcl_configure').each do |configure_file|
     # Extract name of pod from path.
     pod_dir = File.dirname(configure_file)
     pod_name = File.basename(pod_dir).to_s
