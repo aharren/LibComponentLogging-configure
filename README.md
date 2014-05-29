@@ -38,8 +38,13 @@ Then, run `pod install` which will download and install the pods:
 Then, run `lcl_configure pod` to create the `lcl_config*` files:
 
     $ lcl_configure pod
+    Creating configuration file 'lcl_config_components.h'
+    Creating configuration file 'lcl_config_logger.h'
+    Creating configuration file 'lcl_config_extensions.h'
     Using LibComponentLogging-Core (core)
     Using LibComponentLogging-LogFile (LogFile logger)
+    Creating configuration file 'LCLLogFileConfig.h' from template 'Pods/LibComponentLogging-LogFile/LCLLogFileConfig.template.h'
+    [!] Configuration file 'LCLLogFileConfig.h' needs to be adapted before compiling your project, e.g. adapt '<UniquePrefix>'
     Using LibComponentLogging-qlog (qlog extension)
 
 `lcl_configure` analyzes the `Pods` folder and the `Podfile.lock` file and creates the required `lcl_config*` files based on the configured pods.
