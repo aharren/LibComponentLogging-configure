@@ -253,9 +253,14 @@ def configure_pod_components_embedded(pod_dir, pod_name, components_file, embed_
 end
 
 def configure_pod_components_embedded_create_local_config_file(pod_name, file_name)
+  complete_file_name = "Pods/BuildHeaders/#{pod_name}/" + file_name
+
   # Create pod-local lcl_config_*.h file.
-  content = "#include \"../../../#{file_name}\""
-  replace_file("Pods/BuildHeaders/#{pod_name}/" + file_name, content)
+  content = "#include \"../../../#{file_name}\"\n"
+  if (!exists_file(complete_file_name) or File.read(complete_file_name) != content)
+    info("Creating configuration file '#{complete_file_name}'")
+    replace_file(complete_file_name, content)
+  end
 end
 
 def configure_pod_components_embedded_unmbed_lcl_file(pod_name, embed_symbol, file_name)
@@ -329,7 +334,10 @@ END
 
 END
   end
-  replace_file(file_name, content)
+  if (!exists_file(file_name) or File.read(file_name) != content)
+    info("Rewriting file '#{file_name}'")
+    replace_file(file_name, content)
+  end
 end
 
 def configure_pod_instantiate_config_template(pod_dir, config_template, config_files)
