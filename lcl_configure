@@ -435,7 +435,7 @@ def configure_pod()
     type = configure_data['type']
     error("Error: missing 'type' in '#{configure_file}'") if !type
     name = configure_data['name']
-    error("Error: missing 'name' in '#{configure_file}'") if !type
+    error("Error: missing 'name' in '#{configure_file}'") if !name
 
     # Process configure file.
     case type
