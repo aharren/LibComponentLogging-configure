@@ -37,10 +37,13 @@ require 'Digest'
 
 @version = "0.1.0"
 
+@verbose = false
+
 @use_colors = true
 @color_note = ""
 @color_info = ""
 @color_error = ""
+@color_verbose = ""
 @color_normal = ""
 
 def configure_colors()
@@ -48,11 +51,13 @@ def configure_colors()
     @color_note = "\033[31m"
     @color_info = ""
     @color_error = "\033[31m"
+    @color_verbose = "\033[37m"
     @color_normal = "\033[m"
   else
     @color_note = ""
     @color_info = ""
     @color_error = ""
+    @color_verbose = ""
     @color_normal = ""
   end
 end
@@ -68,6 +73,7 @@ Usage: lcl_configure [<options>] <type> [<folder>]
 
 Options:
   --[no-]colors    (Don't) use colored output.
+  --[no-]verbose   (Don't) be verbose about created/modified files etc.
   --help           Print this usage message.
   --version        Print the version.
 
@@ -93,6 +99,15 @@ end
 
 def note(message)
   puts @color_note + '[!] ' + message + @color_normal
+end
+
+def verbose(message)
+  puts @color_verbose + message + @color_normal if @verbose
+end
+
+def cite(text, indent)
+  ln = text.end_with?("\n") ? '' : "\n"
+  return "  >>>>\n" + text.gsub(/^/, indent) + ln + "  <<<<"
 end
 
 
@@ -162,6 +177,7 @@ def lcl_configure_section_insert_in_file(file_name, data)
     configure_section = lcl_configure_section_empty
   end
   content = content.gsub(@lcl_configure_section_match, lcl_configure_section_create(configure_section + data))
+  verbose("Rewriting the lcl_configure section in file '#{file_name}' to\n" + cite(content, '  ') )
   replace_file(file_name, content)
 end
 
@@ -209,8 +225,10 @@ def prepare_configure_plain_create_config_file(file_name, config_files)
   content = File.read(file_name)
   if (lcl_configure_section_extract(content))
     content = lcl_configure_section_clear(content)
+    verbose("Clearing the lcl_configure section in file '#{file_name}'")
   else
     content += @lcl_configure_section_empty
+    verbose("Adding an empty lcl_configure section to file '#{file_name}'")
   end
   replace_file(file_name, content)
 
@@ -244,10 +262,14 @@ end
 #
 
 def configure_pod_core(pod_dir, pod_name, configure_file, configure_data, config_files)
+  verbose("Configuring '#{pod_name}' with type 'core' and configure data\n" + cite(configure_data.to_s, '  '))
+
   # Nothing to do for core.
 end
 
 def configure_pod_logger(pod_dir, pod_name, configure_file, configure_data, config_files)
+  verbose("Configuring '#{pod_name}' with type 'logger' and configure data\n" + cite(configure_data.to_s, '  '))
+
   # Add header file.
   main_header = configure_data['main_header']
   error("Error: missing 'main_header' in '#{configure_file}'") if !main_header
@@ -260,6 +282,8 @@ def configure_pod_logger(pod_dir, pod_name, configure_file, configure_data, conf
 end
 
 def configure_pod_extension(pod_dir, pod_name, configure_file, configure_data, config_files)
+  verbose("Configuring '#{pod_name}' with type 'extension' and configure data\n" + cite(configure_data.to_s, '  '))
+
   # Add header file.
   main_header = configure_data['main_header']
   error("Error: missing 'main_header' in '#{configure_file}'") if !main_header
@@ -272,6 +296,8 @@ def configure_pod_extension(pod_dir, pod_name, configure_file, configure_data, c
 end
 
 def configure_pod_components_embedded(pod_dir, pod_name, components_file, embed_symbol, config_files)
+  verbose("Un-embedding '#{pod_name}' with embed symbol '#{embed_symbol}'")
+
   # Add components.
   content = "#define _#{embed_symbol}lcl_component _lcl_component\n"
   content += "#include \"#{components_file}\"\n"
@@ -297,6 +323,8 @@ def configure_pod_components_embedded_create_local_config_file(pod_name, file_na
   if (!exists_file(complete_file_name) or File.read(complete_file_name) != content)
     info("Creating configuration file '#{complete_file_name}'")
     replace_file(complete_file_name, content)
+  else
+    verbose("Configuration file '#{complete_file_name}' already exists")
   end
 end
 
@@ -374,12 +402,15 @@ END
   if (!exists_file(file_name) or File.read(file_name) != content)
     info("Rewriting file '#{file_name}'")
     replace_file(file_name, content)
+  else
+    verbose("Rewritten file '#{file_name}' already exists")
   end
 end
 
 def configure_pod_instantiate_config_template(pod_dir, config_template, config_files)
   config_template_file = Pathname(pod_dir) + config_template
   config_template_sha256 = Digest::SHA256.file(config_template_file).hexdigest
+  verbose("Hash of template configuration file '#{config_template_file}' is '#{config_template_sha256}'")
   config_file_name = config_template.gsub(/\.template/, '')
   if exists_file(config_file_name)
     # We've stored the SHA256 hash of the original file inside a
@@ -391,12 +422,15 @@ def configure_pod_instantiate_config_template(pod_dir, config_template, config_f
     # then we assume that the existing configuration file originates from that
     # template file. Then, there's nothing to do.
     data = lcl_configure_section_read_json_data_from_file(config_file_name)
+    verbose("Extracted data from lcl_configure section in configuration file '#{config_file_name}' is\n" + cite(data.to_s, '  '))
     if data['base'] != config_template_sha256
       # Existing file doesn't originate from template file, create .new file.
       info("Creating configuration file '#{config_file_name}' from template '#{config_template_file}'")
       config_new_file_name = config_file_name + '.new'
       configure_pod_copy_file_with_lcl_configure_data(config_template_file, config_template_sha256, config_new_file_name)
       note("Configuration file '#{config_file_name}' already exists, please merge with new file '#{config_new_file_name}'")
+    else
+      verbose("Configuration file '#{config_file_name}' is based on current template file")
     end
   else
     # Create configuration file, based on template file. Store the SHA256 hash
@@ -537,6 +571,10 @@ def main(args)
         @use_colors = true
       when '--no-colors'
         @use_colors = false
+      when '--verbose'
+        @verbose = true
+      when '--no-verbose'
+        @verbose = false
       when '--help'
         print_usage_and_exit('')
       when '--version'
