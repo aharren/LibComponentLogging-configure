@@ -35,13 +35,24 @@ require 'Digest'
 # Options.
 #
 
+@version = "0.1.0"
 
 #
 # Usage, info, error, etc.
 #
 
 @usage=<<END
-usage: lcl_configure [<options>] <type> [<folder>]
+(Auto-)configuration for LibComponentLogging, version #{@version}
+
+Usage: lcl_configure [<options>] <type> [<folder>]
+
+Options:
+  --help           Print this usage message.
+  --version        Print the version.
+
+Types:
+  plain            Create configuration files for a plain installation.
+  pod              Create configuration files for CocoaPods-managed dependencies.
 END
 
 def print_usage_and_exit(message = '')
@@ -500,7 +511,15 @@ def main(args)
   while args[argi] =~ /^--/ do
     option = args[argi]
     argi += 1
-    print_usage_and_exit("Error: unknown option '#{option}'")
+    case option
+      when '--help'
+        print_usage_and_exit('')
+      when '--version'
+        puts @version
+        exit
+      else
+        print_usage_and_exit("Error: unknown option '#{option}'")
+    end
   end
 
   # Parse <type>.
