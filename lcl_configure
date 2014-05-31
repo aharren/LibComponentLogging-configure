@@ -32,11 +32,16 @@ require 'Digest'
 
 
 #
+# Options.
+#
+
+
+#
 # Usage, info, error, etc.
 #
 
 @usage=<<END
-usage: lcl_configure <type> [<folder>]
+usage: lcl_configure [<options>] <type> [<folder>]
 END
 
 def print_usage_and_exit(message = '')
@@ -489,12 +494,26 @@ def configure_pod()
 end
 
 def main(args)
-  type = args[0]
+  argi = 0
+
+  # Parse options.
+  while args[argi] =~ /^--/ do
+    option = args[argi]
+    argi += 1
+    print_usage_and_exit("Error: unknown option '#{option}'")
+  end
+
+  # Parse <type>.
+  type = args[argi]
+  argi += 1
   print_usage_and_exit('Error: missing argument <type>') if !type
 
-  folder = args[1]
+  # Parse <folder>, optional.
+  folder = args[argi]
+  argi += 1
   folder = '.' if !folder
 
+  # Process <type>.
   case type
     when 'plain'
       Dir.chdir(folder) do
