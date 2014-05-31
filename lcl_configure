@@ -37,6 +37,26 @@ require 'Digest'
 
 @version = "0.1.0"
 
+@use_colors = true
+@color_note = ""
+@color_info = ""
+@color_error = ""
+@color_normal = ""
+
+def configure_colors()
+  if @use_colors
+    @color_note = "\033[31m"
+    @color_info = ""
+    @color_error = "\033[31m"
+    @color_normal = "\033[m"
+  else
+    @color_note = ""
+    @color_info = ""
+    @color_error = ""
+    @color_normal = ""
+  end
+end
+
 #
 # Usage, info, error, etc.
 #
@@ -47,6 +67,7 @@ require 'Digest'
 Usage: lcl_configure [<options>] <type> [<folder>]
 
 Options:
+  --[no-]colors    (Don't) use colored output.
   --help           Print this usage message.
   --version        Print the version.
 
@@ -56,22 +77,22 @@ Types:
 END
 
 def print_usage_and_exit(message = '')
-  puts message if message != ''
+  error(message) if message != ''
   puts @usage
   exit
 end
 
 def error(message)
-  puts message
+  puts @color_error + message + @color_normal
   exit
 end
 
 def info(message)
-  puts message
+  puts @color_info + message + @color_normal
 end
 
 def note(message)
-  puts '[!] ' + message
+  puts @color_note + '[!] ' + message + @color_normal
 end
 
 
@@ -512,6 +533,10 @@ def main(args)
     option = args[argi]
     argi += 1
     case option
+      when '--colors'
+        @use_colors = true
+      when '--no-colors'
+        @use_colors = false
       when '--help'
         print_usage_and_exit('')
       when '--version'
@@ -521,6 +546,9 @@ def main(args)
         print_usage_and_exit("Error: unknown option '#{option}'")
     end
   end
+
+  # Configure colors.
+  configure_colors()
 
   # Parse <type>.
   type = args[argi]
