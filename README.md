@@ -13,9 +13,12 @@
 Note: `lcl_configure` is still under construction.
 
 
-## Example
+## Example 1, CocoaPods with LibComponentLogging
 
-Take the new LibComponentLogging CocoaPods pod specs from https://github.com/aharren/LibComponentLogging-CocoaPods-NewSpecs.
+Install the new LibComponentLogging CocoaPods pod specs:
+
+    $ pod repo add lcl https://github.com/aharren/LibComponentLogging-CocoaPods-NewSpecs.git
+    Cloning spec repo `lcl` from `https://github.com/aharren/LibComponentLogging-CocoaPods-NewSpecs.git`
 
 Create a `Podfile`, e.g.
 
@@ -54,6 +57,86 @@ Based on the `Podfile` above, the following files are created:
 _lcl_config_components.h:_
 
     /*::lcl_configure:begin::*/
+    /*::lcl_configure:end::*/
+
+_lcl_config_logger.h:_
+
+    /*::lcl_configure:begin::*/
+    #include "LCLLogFile.h"
+    /*::lcl_configure:end::*/
+
+_lcl_config_extensions.h:_
+
+    /*::lcl_configure:begin::*/
+    #include "qlog.h"
+    /*::lcl_configure:end::*/
+
+Whenever you change the `Podfile` and that change is related to LibComponentLogging, you can run `lcl_configure pod` again and `lcl_configure` will update the `lcl_config*` files. `lcl_configure` will only touch the managed `/*::lcl_configure:begin::*/`...`/*::lcl_configure:end::*/` sections inside the `lcl_config*` files.
+
+
+## Example 2, CocoaPods with LibComponentLogging and Un-embedded RestKit
+
+Install the new LibComponentLogging CocoaPods pod specs:
+
+    $ pod repo add lcl https://github.com/aharren/LibComponentLogging-CocoaPods-NewSpecs.git
+    Cloning spec repo `lcl` from `https://github.com/aharren/LibComponentLogging-CocoaPods-NewSpecs.git`
+
+Create a `Podfile` including LibComponentLogging and ResKit, e.g.
+
+    platform :ios, 7
+    pod 'LibComponentLogging-Core'
+    pod 'LibComponentLogging-LogFile'
+    pod 'LibComponentLogging-qlog'
+    pod 'RestKit'
+
+Then, run `pod install` which will download and install the pods:
+
+    $ pod install
+    Analyzing dependencies
+    Downloading dependencies
+    Installing AFNetworking (1.3.4)
+    Installing ISO8601DateFormatterValueTransformer (0.6.0)
+    Installing LibComponentLogging-Core (1.3.3)
+    Installing LibComponentLogging-LogFile (1.2.2)
+    Installing LibComponentLogging-qlog (1.1.1)
+    Installing RKValueTransformers (1.1.0)
+    Installing RestKit (0.23.1)
+    Installing SOCKit (1.1)
+    Installing TransitionKit (2.1.0)
+    Generating Pods project
+    Integrating client project
+
+Then, run `lcl_configure pod` to create the `lcl_config*` files:
+
+    $ lcl_configure pod
+    Creating configuration file 'lcl_config_components.h'
+    Creating configuration file 'lcl_config_logger.h'
+    Creating configuration file 'lcl_config_extensions.h'
+    Using LibComponentLogging-Core (core)
+    Using LibComponentLogging-LogFile (LogFile logger)
+    Creating configuration file 'LCLLogFileConfig.h' from template 'Pods/LibComponentLogging-LogFile/LCLLogFileConfig.template.h'
+    [!] Configuration file 'LCLLogFileConfig.h' needs to be adapted before compiling your project, e.g. adapt '<UniquePrefix>'
+    Using LibComponentLogging-qlog (qlog extension)
+    Using RestKit (un-embedded RestKit/RK)
+    Creating configuration file 'Pods/BuildHeaders/RestKit/lcl_config_components.h'
+    Creating configuration file 'Pods/BuildHeaders/RestKit/lcl_config_logger.h'
+    Creating configuration file 'Pods/BuildHeaders/RestKit/lcl_config_extensions.h'
+    Creating configuration file 'Pods/BuildHeaders/RestKit/LCLLogFileConfig.h'
+    Rewriting file 'Pods/RestKit/Vendor/LibComponentLogging/Core/lcl_RK.h'
+    Rewriting file 'Pods/RestKit/Vendor/LibComponentLogging/Core/lcl_RK.m'
+
+`lcl_configure` analyzes the `Pods` folder and the `Podfile.lock` file and creates the required `lcl_config*` files based on the configured pods.
+
+`lcl_configure` detects an embedded variant of LibComponentLogging inside a pod -- RestKit in this case -- and automatically un-embeds it.
+
+Based on the `Podfile` above, the following files are created:
+
+_lcl_config_components.h:_
+
+    /*::lcl_configure:begin::*/
+    #define _RKlcl_component _lcl_component
+    #include "Pods/RestKit/Code/Support/lcl_config_components_RK.h"
+    #undef _RKlcl_component
     /*::lcl_configure:end::*/
 
 _lcl_config_logger.h:_
