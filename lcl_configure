@@ -253,7 +253,7 @@ def configure_plain()
   config_files = []
 
   # Prepare configuration files.
-  prepare_configure_plain()
+  prepare_configure_plain(config_files)
 end
 
 
