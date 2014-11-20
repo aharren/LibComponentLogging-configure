@@ -316,10 +316,10 @@ def configure_pod_components_embedded(pod_dir, pod_name, components_file, embed_
 end
 
 def configure_pod_components_embedded_create_local_config_file(pod_name, file_name)
-  complete_file_name = "Pods/BuildHeaders/#{pod_name}/" + file_name
+  complete_file_name = "Pods/Headers/Build/#{pod_name}/" + file_name
 
   # Create pod-local lcl_config_*.h file.
-  content = "#include \"../../../#{file_name}\"\n"
+  content = "#include \"../../../../#{file_name}\"\n"
   if (!exists_file(complete_file_name) or File.read(complete_file_name) != content)
     info("Creating configuration file '#{complete_file_name}'")
     replace_file(complete_file_name, content)
