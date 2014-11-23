@@ -609,10 +609,12 @@ def main(args)
   # Process <type>.
   case type
     when 'plain'
+      puts "lcl_configure #{@version}"
       Dir.chdir(folder) do
         configure_plain()
       end
     when 'pod'
+      puts "lcl_configure #{@version}"
       Dir.chdir(folder) do
         configure_pod()
       end
