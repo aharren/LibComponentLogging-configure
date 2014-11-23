@@ -379,8 +379,22 @@ enum _#{embed_symbol}lcl_enum_component_t {
   _#{embed_symbol}lcl_component_t_count
 };
 
-// Map #{embed_symbol} component levels to plain lcl component levels.
+// Map #{embed_symbol} component internals to plain lcl component internals.
+#define _#{embed_symbol}lcl_component_t                 _lcl_component_t
 #define _#{embed_symbol}lcl_component_level             _lcl_component_level
+#define _#{embed_symbol}lcl_component_identifier        _lcl_component_identifier
+#define _#{embed_symbol}lcl_component_header            _lcl_component_header
+#define _#{embed_symbol}lcl_component_name              _lcl_component_name
+
+// Map #{embed_symbol} level internals to plain lcl level internals.
+#define _#{embed_symbol}lcl_level_t                     _lcl_level_t
+#define _#{embed_symbol}lcl_level_header                _lcl_level_header
+#define _#{embed_symbol}lcl_level_header_1              _lcl_level_header_1
+#define _#{embed_symbol}lcl_level_header_3              _lcl_level_header_3
+#define _#{embed_symbol}lcl_level_name                  _lcl_level_name
+
+// Map #{embed_symbol} version internals to plain lcl version internals.
+#define _#{embed_symbol}lcl_version                     _lcl_version
 
 // Map #{embed_symbol} symbol helpers to plain lcl symbol helpers.
 #define __#{embed_symbol}lcl_log_symbol                 __lcl_log_symbol
