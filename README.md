@@ -10,13 +10,11 @@
 
 (Auto-)configuration for [http://0xc0.de/LibComponentLogging](http://0xc0.de/LibComponentLogging).
 
-Note: `lcl_configure` is still under construction.
-
 
 ## Usage
 
     $ ./lcl_configure --help
-    (Auto-)configuration for LibComponentLogging, version 0.1.0
+    (Auto-)configuration for LibComponentLogging, version 0.1.2
     
     Usage: lcl_configure [<options>] <type> [<folder>]
     
@@ -59,6 +57,7 @@ Then, run `pod install` which will download and install the pods:
 Then, run `lcl_configure pod` to create the `lcl_config*` files:
 
     $ lcl_configure pod
+    lcl_configure 0.1.2
     Creating configuration file 'lcl_config_components.h'
     Creating configuration file 'lcl_config_logger.h'
     Creating configuration file 'lcl_config_extensions.h'
@@ -88,6 +87,10 @@ _lcl_config_extensions.h:_
     /*::lcl_configure:begin::*/
     #include "qlog.h"
     /*::lcl_configure:end::*/
+
+_LCLLogFileConfig.h_:
+
+    configuration file for LibComponentLogging-LogFile
 
 Whenever you change the `Podfile` and that change is related to LibComponentLogging, you can run `lcl_configure pod` again and `lcl_configure` will update the `lcl_config*` files. `lcl_configure` will only touch the managed `/*::lcl_configure:begin::*/`...`/*::lcl_configure:end::*/` sections inside the `lcl_config*` files.
 
@@ -127,6 +130,7 @@ Then, run `pod install` which will download and install the pods:
 Then, run `lcl_configure pod` to create the `lcl_config*` files:
 
     $ lcl_configure pod
+    lcl_configure 0.1.2
     Creating configuration file 'lcl_config_components.h'
     Creating configuration file 'lcl_config_logger.h'
     Creating configuration file 'lcl_config_extensions.h'
@@ -145,7 +149,7 @@ Then, run `lcl_configure pod` to create the `lcl_config*` files:
 
 `lcl_configure` analyzes the `Pods` folder and the `Podfile.lock` file and creates the required `lcl_config*` files based on the configured pods.
 
-`lcl_configure` detects an embedded variant of LibComponentLogging inside a pod -- RestKit in this case -- and automatically un-embeds it.
+`lcl_configure` detects an embedded variant of LibComponentLogging inside a pod -- RestKit in this case -- and automatically "un-embeds" it: all references of the embedded variant of LibComponentLogging will be replaced with a reference to the one which is provided via the `Podfile`. This way, RestKit log components will be integrated into the central `lcl_config_components.h` file and RestKit will also use the logging back-end which is configured by the `Podfile`.
 
 Based on the `Podfile` above, the following files are created:
 
@@ -168,6 +172,10 @@ _lcl_config_extensions.h:_
     /*::lcl_configure:begin::*/
     #include "qlog.h"
     /*::lcl_configure:end::*/
+
+_LCLLogFileConfig.h_:
+
+    configuration file for LibComponentLogging-LogFile
 
 Whenever you change the `Podfile` and that change is related to LibComponentLogging, you can run `lcl_configure pod` again and `lcl_configure` will update the `lcl_config*` files. `lcl_configure` will only touch the managed `/*::lcl_configure:begin::*/`...`/*::lcl_configure:end::*/` sections inside the `lcl_config*` files.
 
