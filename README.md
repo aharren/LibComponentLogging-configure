@@ -38,7 +38,8 @@ Update the CocoaPods specs repository to get the latest LibComponentLogging pod 
 
 Create a `Podfile`, e.g.
 
-    platform :ios, 7
+    platform :ios, 8
+    
     pod 'LibComponentLogging-Core'
     pod 'LibComponentLogging-LogFile'
     pod 'LibComponentLogging-qlog'
@@ -104,7 +105,8 @@ Update the CocoaPods specs repository to get the latest LibComponentLogging pod 
 
 Create a `Podfile` including LibComponentLogging and ResKit, e.g.
 
-    platform :ios, 7
+    platform :ios, 8
+    
     pod 'LibComponentLogging-Core'
     pod 'LibComponentLogging-LogFile'
     pod 'LibComponentLogging-qlog'
