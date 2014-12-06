@@ -184,10 +184,12 @@ Whenever you change the `Podfile` and that change is related to LibComponentLogg
 
 The `LibComponentLoggings-pods` CocoaPods pod spec can be used to automatically download `lcl_configure` to your project, e.g. create the following `Podfile`:
 
-    platform :ios, 7
+    platform :ios, 8
+    
     pod 'LibComponentLogging-Core'
     pod 'LibComponentLogging-LogFile'
     pod 'LibComponentLogging-qlog'
+    
     pod 'LibComponentLogging-pods'
 
 After running `pod install`, `lcl_configure` will be available at `Pods/LibComponentLogging-pods/configure/lcl_configure`, e.g. you can run
@@ -195,6 +197,24 @@ After running `pod install`, `lcl_configure` will be available at `Pods/LibCompo
     Pods/LibComponentLogging-pods/configure/lcl_configure pod
 
 to create/update the `lcl_config*` files.
+
+You can install `lcl_configure` as a `post_install` hook in your `Podfile`:
+
+    platform :ios, 8
+    
+    pod 'LibComponentLogging-Core'
+    pod 'LibComponentLogging-LogFile'
+    pod 'LibComponentLogging-qlog'
+    
+    pod 'LibComponentLogging-pods'
+    
+    post_install do |installer|
+      # run lcl_configure
+      puts 'Running lcl_configure'
+      system 'Pods/LibComponentLogging-pods/configure/lcl_configure pod'
+    end
+
+This way, `lcl_configure` is automatically run by `pod install` etc. and your `lcl_config*` files get updated automatically.
 
 
 ## Copyright and License
