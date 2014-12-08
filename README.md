@@ -182,9 +182,9 @@ _LCLLogFileConfig.h_:
 Whenever you change the `Podfile` and that change is related to LibComponentLogging, you can run `lcl_configure pod` again and `lcl_configure` will update the `lcl_config*` files. `lcl_configure` will only touch the managed `/*::lcl_configure:begin::*/`...`/*::lcl_configure:end::*/` sections inside the `lcl_config*` files.
 
 
-## LibComponentLoggings-pods
+## LibComponentLogging-pods
 
-The `LibComponentLoggings-pods` CocoaPods pod spec can be used to automatically download `lcl_configure` to your project, e.g. create the following `Podfile`:
+The `LibComponentLogging-pods` CocoaPods pod spec can be used to automatically download `lcl_configure` to your project, e.g. create the following `Podfile`:
 
     platform :ios, 8
     
