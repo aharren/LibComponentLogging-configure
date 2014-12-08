@@ -211,8 +211,6 @@ You can install `lcl_configure` as a `post_install` hook in your `Podfile`:
     pod 'LibComponentLogging-pods'
     
     post_install do |installer|
-      # run lcl_configure
-      puts 'Running lcl_configure'
       system 'Pods/LibComponentLogging-pods/configure/lcl_configure pod'
     end
 
