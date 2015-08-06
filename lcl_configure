@@ -320,9 +320,13 @@ def configure_pod_components_embedded_create_local_config_file(pod_name, file_na
     # CocoaPods 0.33.x
     complete_file_name = "Pods/BuildHeaders/#{pod_name}/" + file_name
     path_to_root = "../../.."
-  else
+  elsif (exists_directory("Pods/Headers/Build/#{pod_name}/"))
     # CocoaPods 0.34.x
     complete_file_name = "Pods/Headers/Build/#{pod_name}/" + file_name
+    path_to_root = "../../../.."
+  else
+    # CocoaPods 0.38.x
+    complete_file_name = "Pods/Headers/Public/#{pod_name}/" + file_name
     path_to_root = "../../../.."
   end
 
