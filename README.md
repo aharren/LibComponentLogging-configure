@@ -14,7 +14,7 @@
 ## Usage
 
     $ ./lcl_configure --help
-    (Auto-)configuration for LibComponentLogging, version 0.1.2
+    (Auto-)configuration for LibComponentLogging, version 0.1.3
     
     Usage: lcl_configure [<options>] <type> [<folder>]
     
@@ -58,7 +58,7 @@ Then, run `pod install` which will download and install the pods:
 Then, run `lcl_configure pod` to create the `lcl_config*` files:
 
     $ lcl_configure pod
-    lcl_configure 0.1.2
+    lcl_configure 0.1.3
     Creating configuration file 'lcl_config_components.h'
     Creating configuration file 'lcl_config_logger.h'
     Creating configuration file 'lcl_config_extensions.h'
@@ -132,7 +132,7 @@ Then, run `pod install` which will download and install the pods:
 Then, run `lcl_configure pod` to create the `lcl_config*` files:
 
     $ lcl_configure pod
-    lcl_configure 0.1.2
+    lcl_configure 0.1.3
     Creating configuration file 'lcl_config_components.h'
     Creating configuration file 'lcl_config_logger.h'
     Creating configuration file 'lcl_config_extensions.h'
